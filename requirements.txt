@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pinecone-client
+python-dotenv
+google-generativeai
+pydantic
+pydantic-settings
+requests
+python-multipart
+
+
