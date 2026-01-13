@@ -19,7 +19,7 @@ services:
       # - ./app:/app/app
       - ./logs:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8046/"]
+      test: ["CMD-SHELL", "curl -f http://localhost:8046/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
