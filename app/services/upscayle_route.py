@@ -71,3 +71,58 @@ async def get_task_status(task_id: str):
     """
     result = upscayle_service.get_task_status(task_id)
     return result
+
+
+@router.post("/images-sync", response_model=dict)
+async def upscale_images_sync(
+    files: List[UploadFile] = File(..., description="Image files to upscale (max 3)"),
+    model: str = Form(default="upscayl-standard-4x", description="Upscaling model"),
+    scale: str = Form(default="4", description="Scale factor (2, 4, or 8)"),
+    saveImageAs: str = Form(default="jpg", description="Output format (jpg or png)"),
+    enhanceFace: bool = Form(default=True, description="Enable face enhancement"),
+    timeout: int = Form(default=1200, description="Maximum wait time in seconds (default: 1200 = 20 minutes)"),
+):
+    """
+    Upscale images synchronously - returns results immediately after processing.
+    
+    This endpoint will process the images and wait until they are ready,
+    then return the downloadable links in the same response.
+    
+    - **files**: Upload up to 3 image files
+    - **model**: Choose the upscaling model (default: upscayl-standard-4x)
+    - **scale**: Scale factor - 2x, 4x, or 8x (default: 4)
+    - **saveImageAs**: Output format - jpg or png (default: jpg)
+    - **enhanceFace**: Enable face enhancement (default: true)
+    - **timeout**: Maximum wait time in seconds (default: 1200 = 20 min)
+    
+    Returns the completed task with downloadable image URLs.
+    Note: Large images or high scale factors may take 15-20 minutes to process.
+    """
+    # Validate file count
+    if len(files) > 3:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 3 files allowed per request"
+        )
+    
+    # Validate file types
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+    for file in files:
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type: {file.content_type}. Allowed: {', '.join(allowed_types)}"
+            )
+    
+    # Create request params
+    request_params = UpscaleRequest(
+        model=model,
+        scale=scale,
+        saveImageAs=saveImageAs,
+        enhanceFace=enhanceFace
+    )
+    
+    # Process the upscaling request synchronously
+    result = await upscayle_service.upscale_images_sync(files, request_params, max_wait_time=timeout)
+    
+    return result

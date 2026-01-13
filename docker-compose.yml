@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  upscayle-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: upscayle-api
+    ports:
+      - "8046:8046"
+    environment:
+      - UPSCAYLE_API_KEY=${UPSCAYLE_API_KEY}
+      - UPSCAYLE_API_URL=${UPSCAYLE_API_URL:-https://api.upscayl.org}
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      # Optional: Mount for development hot-reload
+      # - ./app:/app/app
+      - ./logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8046/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
